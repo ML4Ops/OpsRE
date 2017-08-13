@@ -14,8 +14,10 @@ Model
 ---- Extrapolated positions and simulated (noisy) observations
 - Data analysis
 -- Implement SparkML regression analysis of the dataset
+
 View
 - Publish data view email and FB news feed
+
 Controller
 - Accept inputs from users and based on their authorizations implement their requests
 
