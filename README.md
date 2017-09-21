@@ -21,3 +21,12 @@ View
 Controller
 - Accept inputs from users and based on their authorizations implement their requests
 
+Outer Layer
+- Standardize structure around the application for integrated testing, training and exercises
+- Consists of three major components
+-- White Team: manage application configuration and execution, performance evaluation
+-- Red Team: provide data feeds, both live, archive and simulation
+-- Blue Team: operators.  May be live personnel or emulated.  Roles and responsibilities in three main catagories
+--- Strategic: define goals
+--- Operations: convert strategic goals to tactical taskings, allocate resources
+--- Tactical: execute tasking, monitor data
