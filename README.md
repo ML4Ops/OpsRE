@@ -44,3 +44,7 @@ Define the whole game
 - The simulation consists of rocket bodies in orbit and the player needs to determine which rocket bodies to de-orbit for maximum benefit. 
 - Estimate the size of the solar panels needed to charge the electric rail gun to launch the projectile based on one launch per week (or some other period)
 - Projectile gets launched into orbit and meets up with the rocket body after N orbits or is launched suborbitally and meets up with the rocket body at apogee. 
+
+References
+- Magnetic Launch
+-- https://www.researchgate.net/publication/251861268_StarTram_The_Magnetic_Launch_Path_to_Very_Low_Cost_Very_High_Volume_Launch_to_Space
