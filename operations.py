@@ -3,18 +3,14 @@ import Observations as obs
 import numpy as np
 
 maxObjCount = 4
+t = 0.0
 
 obs = obs.Observations()
 
-t = proj.secondOfYear(237.19596243)
-
 p = [None]*maxObjCount
 
-# Initialize objects
-for objCount in range (0,maxObjCount):
-    
-    p[objCount] = proj.Projectile(objCount, "Satellite"+str(objCount))
-         
+def createObject (objCount):
+             
     # initialize element set with this TLE
     # 1 05398U 71067E   17237.19596243  .00000191  00000-0  60767-4 0  9996
     # 2 05398  87.6282 147.4622 0065864  59.7371 301.0323 14.33603389412679   
@@ -30,7 +26,7 @@ for objCount in range (0,maxObjCount):
     
     # argument of perigee
     omega_AP = proj.deg2radian(59.7371)
-    # right ascension of the acsending node
+    # longitude of the acsending node
     if (objCount < 2):
         omega_LAN = proj.deg2radian(147.4622)
     else:
@@ -43,51 +39,68 @@ for objCount in range (0,maxObjCount):
     else:
         meanAnomaly = proj.deg2radian(301.0323)
         
-    revsPerDay = 14.33603389
-    orbitalPeriod = 86400./revsPerDay
+    orbitalPeriod = proj.computeOrbitalPeriod(a)
     T = t - orbitalPeriod*(meanAnomaly/360)
 
-    p[objCount].kep_init (a,e,i,omega_AP,omega_LAN,T)
-    print objCount, "initial elements: ",a,e,i,omega_AP,omega_LAN,T
+    return a,e,i,omega_AP,omega_LAN,T
 
 
-loop = 0
-delta_t = orbitalPeriod/8 # 1
-running = True
+# Prepare simulation run
+def simulationPrep():
+    # Initialize objects
+    for objCount in range (0,maxObjCount):
+        p[objCount] = proj.Projectile(objCount, "Satellite"+str(objCount))
+        a,e,i,omega_AP,omega_LAN,T = createObject(objCount)
+        p[objCount].kep_init (a,e,i,omega_AP,omega_LAN,T)
 
-r_offset = [0., 0., 0.]
-v_offset = [0., 0., 0.]
-
-while running:
-    for objCount in range (0,3):
-        r_true, v_true, h_true = p[objCount].propagate(t)
-        print "r,v,h: ",t, r_true, v_true, h_true
-    ##    h_bar = np.cross(r_true,v_true)
-    ##    h = np.linalg.norm(h_bar)
-    ##    r = np.linalg.norm(r_true)
-    ##    v = np.linalg.norm(v_true)
-    ##    print "H:",h_bar, h, r, v
-        
-        r_obs, v_obs, h_obs = p[objCount].observe(r_true, v_true, r_offset, v_offset)
-
-        # Convert to element set
-        a,e,i,omega_AP,omega_LAN,T,h = proj.cart_2_kep(t,r_obs, v_obs)
-        print "Check elements: ",t,a,e,i,omega_AP,omega_LAN,T,h
-        
-        # Evaluation process
-        # - when new data is received compute element set
-        # - attempt to correlate element set with previously received data
-        # - if correlates, then evaluate statistics of data for this object
-        # - determine if any other object represents a collision hazard with this object
-        obs.model(t, r_obs, v_obs, h_obs)
-
+def simulationRun(t,running): 
+    loop = 0
+    delta_t = 100.   
+    r_offset = [0., 0., 0.]
+    v_offset = [0., 0., 0.]
     
-    t = t + delta_t
-    loop = loop + 1
+    while running:
+        for objCount in range (0,maxObjCount):
+            
+            r_true, v_true, h_true = p[objCount].propagate(t)
+            # print "r,v,h: ",t, r_true, v_true, h_true
+            
+            r_obs, v_obs, h_obs = p[objCount].observe(r_true, v_true, r_offset, v_offset)
 
-    if loop > 4:
-        running = False
+            # Evaluation process
+            # - when new data is received compute element set
+            # - attempt to correlate element set with previously received data
+            # - if correlates, then evaluate statistics of data for this object
+            # - determine if any other object represents a collision hazard with this object
+            obs.model(t, r_obs, v_obs, h_obs)
+        
+        t = t + delta_t
+        loop = loop + 1
 
+        if loop > 4:
+            running = False
+    return t
 
+def benchmark():
+# Run simulation at this level
+    t = 0.0
+    prj = proj.Projectile(0, "Satellite"+str(0))
+    a,e,i,omega_AP,omega_LAN,T = createObject(0)
+    prj.kep_init (a,e,i,omega_AP,omega_LAN,T)
+    running = True
+    for loop in range (0,100000):
+        r_true, v_true, h_true = prj.propagate(t)
+        t = t + 1
+    print "time:",t
+
+# Run simulation at this level
+print "Start benchmark"
+benchmark()
+print "End benchmark"
+t = proj.secondOfYear(0.0)
+simulationPrep()
+running = True
+t = simulationRun(t,running)
+print "time:",t
 
 
