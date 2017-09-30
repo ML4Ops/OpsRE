@@ -20,6 +20,11 @@ def radian2deg(rad):
 def secondOfYear(dayOfYear):
     return 86400.0*dayOfYear
 
+def computeOrbitalPeriod(semiMajorAxis):
+    period = np.sqrt((semiMajorAxis**3)/mu)
+    return period
+    
+
 # Keplerian elements
 # a - semi-major axis
 # e - eccentricity
@@ -29,7 +34,8 @@ def secondOfYear(dayOfYear):
 # T - time of periapse passage
 # EA - eccentric anomaly
 
-# Calculations described at http://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
+
+# calculations described at http://ccar.colorado.edu/asen5070/handouts/cart2kep2002.pdf
 
 def cart_2_kep(t, r_vec,v_vec):
     #1
@@ -50,11 +56,11 @@ def cart_2_kep(t, r_vec,v_vec):
     #7 Compute the right ascension of the ascending node, omega_LAN
     omega_LAN = np.arctan2(h_bar[0],-h_bar[1])
     #8 Compute the argument of latitude
-    #  beware of division by zero here
+    #beware of division by zero here
     lat = np.arctan2(np.divide(r_vec[2],(np.sin(i))),\
     (r_vec[0]*np.cos(omega_LAN) + r_vec[1]*np.sin(omega_LAN)))
     #9 Compute the true anomaly, nu
-    #  beware of numerical errors here
+    # beware of numerical errors here
     nu = np.arccos(np.round(a*(1 - e**2) - r, decimals = 1)/ \
     np.round(e*r , decimals = 1))
     #10 Compute the argument of periapse, omega_AP
@@ -62,8 +68,8 @@ def cart_2_kep(t, r_vec,v_vec):
     #11 Compute the eccentric anomaly, EA
     EA = 2*np.arctan(np.sqrt((1-e)/(1+e)) * np.tan(nu/2))
     #12 Compute the time of periapse passage, T
-    n = np.sqrt(mu/(a**3))
-    T = t - (1/n)*(EA - e*np.sin(EA))
+    period = computeOrbitalPeriod(a)
+    T = t - period*(EA - e*np.sin(EA))
 
     return a,e,i,omega_AP,omega_LAN,T,h_bar
 
@@ -73,34 +79,38 @@ def eccAnom (ec, m):
     i = 0
     maxIter=30
     delta = 0.00001
+    # print ("eccAnom1: ",ec, m)
     # m = 2.0*np.pi*(m-np.floor(m))
     if (ec < 0.):
         E=m
     else:
         E=np.pi
-        
+    # print ("eccAnom2: ",E, m)
     F = E - ec*np.sin(m) - m
     
+    # print ("eccAnom3: ",F, delta)
     while ((np.abs(F) > delta) and (i<maxIter)):
         E = E - F/(1.0-ec*np.cos(E))
         F = E - ec*np.sin(E) - m
         i = i + 1
         check = E - ec*np.sin(E)
+        # print ("eccAnom4: ",E, F, check, m)
     return E
 
-# calculations described at http://ccar.colorado.edu/asen5070/handouts/kep2cart_2002.doc
-
+# calculations described at http://ccar.colorado.edu/asen5070/handouts/kep2cart_2002.doc               
 def kep_2_cart(t,a,e,i,omega_AP,omega_LAN,T):
 
     #1 Compute the mean anomaly
-    # Compute orbital period, n
+    # compute orbital period, n
     n = np.sqrt(mu/(a**3))
-    # Mean anomaly, M, is the portion of a period since last periapse
+    # mean anomaly, M, is the portion of a period since last periapse
+    # 
     M = 2*np.pi*n*(t - T)
-    #2 - Compute eccentric anomaly, EA
-    # Solve for Kepler's equation with the Newton-Raphson method
+    #2 - compute eccentric anomaly, EA
+    # solve for Kepler's equation with the Newton-Raphson method
     EA = eccAnom(e, M)
     check = EA - e*np.sin(EA)
+    # print "ecc, check and mean anomaly: ",EA, check, M,n,(1.0/n),t,T
     #3 
     nu = 2*np.arctan(np.sqrt((1-e)/(1+e)) * np.tan(EA/2))
     #4
@@ -110,11 +120,13 @@ def kep_2_cart(t,a,e,i,omega_AP,omega_LAN,T):
     #6
     Om = omega_LAN
     w =  omega_AP
+    # print ('nu,r,h,Om,w: ',nu,r,h,Om,w)
 
     X = r*(np.cos(Om)*np.cos(w+nu) - np.sin(Om)*np.sin(w+nu)*np.cos(i))
     Y = r*(np.sin(Om)*np.cos(w+nu) + np.cos(Om)*np.sin(w+nu)*np.cos(i))
     Z = r*(np.sin(i)*np.sin(w+nu))
     r_vec = [X, Y, Z]
+    #print ('x,y,z: ',X,Y,Z)
 
     #7
     p = a*(1-e**2)
@@ -140,7 +152,7 @@ class Projectile:
                  objName):
 
         # Keep count of instances
-        # count = count + 1
+        count = count + 1
 
         # Set time to zero
         t = 0
@@ -174,17 +186,20 @@ class Projectile:
         return self
 
     def propagate(self,t):
+        # print 'propagate: ',t, self.a,self.e,self.i,self.omega_AP,self.omega_LAN,self.T
         r_vec, v_vec, h_vec = kep_2_cart(t,self.a,self.e,self.i,self.omega_AP,self.omega_LAN,self.T)
+        # print 'sv: ',r_vec, v_vec
         return [r_vec, v_vec, h_vec]
 
-    # This observation should optionally include injected signal or noise
+    # This observation should optionally include
+    # injected signal or noise
     def observe(self, r, v, r_offset, v_offset):
         r_obs = [r[0]+r_offset[0], r[1]+r_offset[1], r[2]+r_offset[2]]
         v_obs = [v[0]+v_offset[0], v[1]+v_offset[1], v[2]+v_offset[2]]
         h_obs = np.cross(r_obs,v_obs)
         return r_obs, v_obs, h_obs
 
-## Two Line Element Set Format
+##Two Line Element Set Format
 # From: https://www.celestrak.com/columns/v04n03/
 # Line 1
 # Column	Description
