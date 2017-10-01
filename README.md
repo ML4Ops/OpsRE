@@ -47,6 +47,9 @@ Define the whole game
 
 References
 - Magnetic Launch
--- https://www.researchgate.net/publication/251861268_StarTram_The_Magnetic_Launch_Path_to_Very_Low_Cost_Very_High_Volume_Launch_to_Space
+--https://www.researchgate.net/publication/251861268_StarTram_The_Magnetic_Launch_Path_to_Very_Low_Cost_Very_High_Volume_Launch_to_Space
+
 -- http://large.stanford.edu/courses/2012/ph240/thavapatikom2/
+
+
 
