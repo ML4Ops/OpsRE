@@ -1,3 +1,14 @@
+# Flask test file
+# -- use this to prototype the structure of the Flask app that will run
+# -- the OpsRE demonstration
+
+# -- Functions
+#   1. Create and manage database
+#   2. Configure the creation of orbiting objects
+#   3. Provide message and alerts when observations correlate and
+#       if objects have close approaches
+#   4. Create and inject 
+
 from flask import Flask
 
 import sqlite3
@@ -49,6 +60,10 @@ def show_user_profile(username):
 def show_post(post_id):
     # show the post with the given id, the id is an integer
     return 'Post %d' % post_id
+
+@app.route('/create_sim')
+def create_sim():
+    return 1
 
 if __name__ == '__main__':
     app.run()
